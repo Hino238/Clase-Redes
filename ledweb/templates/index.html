@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoreo de sensores</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .led { width: 60px; height: 60px; border-radius: 50%; border: 4px solid #333; transition: 0.3s; margin: 0 auto; }
+        .led-green { background: #00ff88; box-shadow: 0 0 20px #00ff88; }
+        .led-yellow { background: #ffcc00; box-shadow: 0 0 20px #ffcc00; }
+        .led-red { background: #ff4444; box-shadow: 0 0 20px #ff4444; }
+        .card { border-radius: 15px; background-color: #000 !important; border: 1px solid #333; }
+    </style>
+</head>
+<body class="bg-dark text-light">
+    <nav class="navbar navbar-dark bg-black border-bottom border-secondary mb-4">
+        <div class="container-fluid px-4">
+            <span class="navbar-brand fw-bold text-uppercase">Control de Sensores</span>
+            <a href="/logout" class="btn btn-danger btn-sm fw-bold">CERRAR SESIÓN</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card p-4 text-center">
+                    <h6 class="text-secondary text-uppercase">Humedad</h6>
+                    <div id="led-humedad" class="led led-green my-4"></div>
+                    <h1 class="display-2 fw-bold" id="txt-humedad">0%</h1>
+                    <input type="range" class="form-range" id="range-humedad" min="0" max="100" value="0">
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="card p-4 text-center">
+                    <h6 class="text-secondary text-uppercase">Temperatura</h6>
+                    <div id="led-temp" class="led led-red my-4"></div>
+                    <h1 class="display-2 fw-bold" id="txt-temp">15°C</h1>
+                    <input type="range" class="form-range" id="range-temp" min="15" max="40" value="15">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Actualizaciones
+        const sliderH = document.getElementById('range-humedad');
+        const textH = document.getElementById('txt-humedad');
+        const ledH = document.getElementById('led-humedad');
+
+        const sliderT = document.getElementById('range-temp');
+        const textT = document.getElementById('txt-temp');
+        const ledT = document.getElementById('led-temp');
+
+        // Listener para Humedad
+        sliderH.oninput = function() {
+            let v = this.value;
+            textH.innerHTML = v + "%";
+            
+            let color, estado;
+            if (v < 33) { color = "green"; estado = "OK"; }
+            else if (v <= 66) { color = "yellow"; estado = "ADVERTENCIA"; }
+            else { color = "red"; estado = "ALERTA"; }
+
+            ledH.className = "led led-" + color;
+            fetch('/update_sensor', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ type: "HUMEDAD", status: estado })
+            });
+        };
+
+        // Listener para Temperatura
+        sliderT.oninput = function() {
+            let v = this.value;
+            textT.innerHTML = v + "°C";
+            
+            let color, estado;
+            if (v >= 15 && v <= 22) { color = "green"; estado = "NORMAL"; }
+            else if (v >= 23 && v <= 28) { color = "yellow"; estado = "ELEVADA"; }
+            else { color = "red"; estado = "ALERTA"; }
+
+            ledT.className = "led led-" + color;
+            fetch('/update_sensor', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ type: "TEMP", status: estado })
+            });
+        };
+    </script>
+</body>
+</html>
